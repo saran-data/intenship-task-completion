@@ -1,22 +1,41 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brain, Lock, Mail, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { signUp, user, loading } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user && !loading) {
+      window.location.href = "/dashboard";
+    }
+  }, [user, loading]);
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Demo registration - in real app would create account
-    window.location.href = "/login";
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords don't match!");
+      return;
+    }
+    setIsSubmitting(true);
+    const { error } = await signUp(formData.email, formData.password, formData.username);
+    if (!error) {
+      navigate("/login");
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -123,8 +142,12 @@ const Register = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full gradient-primary text-white hover:opacity-90 transition-smooth">
-                Create Account
+              <Button 
+                type="submit" 
+                className="w-full gradient-primary text-white hover:opacity-90 transition-smooth"
+                disabled={isSubmitting || loading}
+              >
+                {isSubmitting ? "Creating account..." : "Create Account"}
               </Button>
             </form>
 

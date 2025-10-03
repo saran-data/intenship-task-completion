@@ -1,20 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Brain, Lock, Mail } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
+  const { signIn, user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user && !loading) {
+      window.location.href = "/dashboard";
+    }
+  }, [user, loading]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Demo login - in real app would authenticate
-    window.location.href = "/dashboard";
+    setIsSubmitting(true);
+    await signIn(email, password);
+    setIsSubmitting(false);
   };
 
   return (
@@ -126,8 +136,12 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full gradient-primary text-white hover:opacity-90 transition-smooth">
-                Sign In
+              <Button 
+                type="submit" 
+                className="w-full gradient-primary text-white hover:opacity-90 transition-smooth"
+                disabled={isSubmitting || loading}
+              >
+                {isSubmitting ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
